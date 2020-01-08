@@ -38,7 +38,7 @@ SCRIPT_DIR = SCRIPT_PATH[0:SCRIPT_PATH.rfind("/")+1] # get script directory
 # conversion from stream coordinate to full image coordinate
 X_MO_CONV = imageWidth/float(streamWidth)
 Y_MO_CONV = imageHeight/float(streamHeight)
-
+cameraGain = 0
 # Buffer
 # -------------------
 bytesToReserve = 512 * 1024 * 1024 # Keep 512 mb free on disk
@@ -154,7 +154,7 @@ def take_day_image(image_path):
         camera.hflip = imageHFlip
         camera.exposure_mode = 'auto'
         camera.awb_mode = 'auto'
-        time.sleep(1)
+        time.sleep(2)
         camera.capture(image_path)
         camera.close()
     return image_path
@@ -167,16 +167,20 @@ def get_stream_array():
         with picamera.array.PiRGBArray(camera) as stream:
             camera.vflip = imageVFlip
             camera.hflip = imageHFlip
-            camera.exposure_mode = 'night'
+            camera.exposure_mode = 'auto'    
             camera.awb_mode = 'auto'
             camera.capture(stream, format='rgb')
+            global cameraGain
+            cameraGain = camera._get_analog_gain()
             camera.close()
             return stream.array
 
 #------------------------------------------------------------------------------
-def scan_motion():
+def scan_motion(threshold,sensitivity):
     """ Loop until motion is detected """
     data1 = get_stream_array()
+    lowThreshold = 5
+    lowSensitivity = 256
     while True:
         data2 = get_stream_array()
         diff_count = 0
@@ -185,11 +189,18 @@ def scan_motion():
                 # get pixel differences. Conversion to int
                 # is required to avoid unsigned short overflow.
                 diff = abs(int(data1[y][x][1]) - int(data2[y][x][1]))
-                if  diff > threshold:
-                    diff_count += 1
-                    if diff_count > sensitivity:
-                        # x,y is a very rough motion position
-                        return x, y
+                if cameraGain >= 6:
+                    if  diff > lowThreshold:
+                        diff_count += 1
+                        if diff_count > lowSensitivity:
+                            # x,y is a very rough motion position
+                            return x, y
+                else:
+                    if  diff > threshold:
+                        diff_count += 1
+                        if diff_count > sensitivity:
+                            # x,y is a very rough motion position
+                            return x, y
         data1 = data2
 
 #------------------------------------------------------------------------------
@@ -202,7 +213,7 @@ def do_motion_detection():
     if not imageNumOn:
         print("%s INFO  : File Naming by Date Time Sequence" % get_now())
     while True:
-        x_pos, y_pos = scan_motion()
+        x_pos, y_pos = scan_motion(threshold,sensitivity)
         file_name = get_file_name(imagePath, imageNamePrefix, current_count)
         take_day_image(file_name)
         if imageNumOn:
@@ -233,3 +244,4 @@ if __name__ == '__main__':
         print("")
         print("INFO  : User Pressed ctrl-c")
         print("        Exiting %s %s " % (PROG_NAME, PROG_VER))
+

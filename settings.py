@@ -6,13 +6,15 @@ configName  = "settings.py"
 
 verbose = True  # True= Enable Logging Messages  False= Disable
 
+
+
 # User Image Settings
 # -------------------
 imagePath = "images"    # Folder path to save images
 imageNamePrefix = 'mo-' # Prefix for all image file names. Eg front-
-imageWidth = 1280       # Final image width
-imageHeight = 720       # Final image height
-imageVFlip = True       # Flip image Vertically
+imageWidth = 1640       # Final image width
+imageHeight = 1232       # Final image height
+imageVFlip = True     # Flip image Vertically
 imageHFlip = True       # Flip image Horizontally
 imagePreview = False    # Set picamera preview False=off True=on
 imageNumOn = False      # Image Naming True=Number sequence  False=DateTime
@@ -20,10 +22,10 @@ imageNumStart = 1000    # Start of number sequence if imageNumOn=True
 
 # User Motion Detection Settings
 # ------------------------------
-threshold = 10  # How Much pixel changes
-sensitivity = 100  # How many pixels change
-streamWidth = 128  # motion scan stream Width
-streamHeight = 80
+threshold = 15  # How Much pixel changes
+sensitivity = 512  # How many pixels change
+streamWidth = 256  # motion scan stream Width
+streamHeight = 160
 
 #======================================
 #       webserver.py Settings
