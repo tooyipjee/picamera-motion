@@ -38,10 +38,9 @@ SCRIPT_DIR = SCRIPT_PATH[0:SCRIPT_PATH.rfind("/")+1] # get script directory
 # conversion from stream coordinate to full image coordinate
 X_MO_CONV = imageWidth/float(streamWidth)
 Y_MO_CONV = imageHeight/float(streamHeight)
-
 # Buffer
 # -------------------
-bytesToReserve = 512 * 1024 * 1024 # Keep 512 mb free on disk
+bytesToReserve = 2048 * 1024 * 1024 # Keep 512 mb free on disk
 #------------------------------------------------------------------------------
 def keepDiskSpaceFree(bytesToReserve):
     if (getFreeSpace() < bytesToReserve):
@@ -57,7 +56,8 @@ def getFreeSpace():
     st = os.statvfs(".")
     du = st.f_bavail * st.f_frsize
     print("Free space :" + str(du/(1024*1024)))
-    return du    
+    return du  
+
 #------------------------------------------------------------------------------
 def get_now():
     """ Get datetime and return formatted string"""
@@ -167,7 +167,7 @@ def get_stream_array():
         with picamera.array.PiRGBArray(camera) as stream:
             camera.vflip = imageVFlip
             camera.hflip = imageHFlip
-            camera.exposure_mode = 'night'
+            camera.exposure_mode = 'auto'
             camera.awb_mode = 'auto'
             camera.capture(stream, format='rgb')
             camera.close()
@@ -211,6 +211,9 @@ def do_motion_detection():
         mo_x = x_pos * X_MO_CONV
         mo_y = y_pos * Y_MO_CONV
         if verbose:
+            command = "./../build/armv7l/Release/object_detection_sample_ssd -m ../build/face-detection-adas-0001.xml -d MYRIAD -i "
+            os.system(command + file_name)
+
             print("%s INFO  : Motion xy(%d,%d) Saved %s (%ix%i)"
                   % (get_now(), mo_x, mo_y, file_name,
                      imageWidth, imageHeight,))
